@@ -1,3 +1,7 @@
+// Remove import './sound.js'; and use only one waterHitSound instance
+const waterHitSound = new Audio('click.mp3/392116__freezegelman__water-hit-3.wav');
+waterHitSound.preload = 'auto';
+
 // Variables to control game state
 let gameRunning = false; // Keeps track of whether game is active or not
 let dropMaker; // Will store our timer that creates drops regularly
@@ -41,12 +45,22 @@ function startGame() {
   // Create new drops every second (1000 milliseconds)
   dropMaker = setInterval(createDrop, dropInterval);
 
-  // Gradually increase speed every second
+  // Gradually increase speed and drop frequency every second
   if (typeof speedInterval !== 'undefined') clearInterval(speedInterval);
+  let secondsElapsed = 0;
   speedInterval = setInterval(() => {
     if (!gameRunning) return;
-    if (dropSpeed > 1) {
-      dropSpeed -= 0.03; // Gradually increase speed
+    secondsElapsed++;
+    // Every 10 seconds, increase speed and drop frequency
+    if (secondsElapsed % 10 === 0) {
+      if (dropSpeed > 1) {
+        dropSpeed -= 0.3; // Increase fall speed more noticeably
+      }
+      if (dropInterval > 400) {
+        dropInterval -= 60; // Increase drop frequency more noticeably
+        clearInterval(dropMaker);
+        dropMaker = setInterval(createDrop, dropInterval);
+      }
     }
   }, 1000);
 }
@@ -89,7 +103,7 @@ function showConfetti() {
 
 function showGameOver() {
   // Remove all drops
-  document.querySelectorAll('.water-drop, .bad-emoji').forEach(el => el.remove());
+  document.querySelectorAll('.water-drop, .bad-emoji, .special-can').forEach(el => el.remove());
   // Check if new high score
   const isNewHigh = score > highScore;
   if (isNewHigh) highScore = score;
@@ -110,6 +124,9 @@ function showGameOver() {
   if (isNewHigh) showConfetti();
   document.getElementById('try-again-btn').onclick = () => {
     overlay.remove();
+    // Reset dropInterval and dropSpeed to initial values before starting a new game
+    dropInterval = 1000;
+    dropSpeed = 4;
     startGame();
   };
 }
@@ -170,6 +187,13 @@ function createDrop() {
     }, { once: true });
   } else {
     drop.className = "water-drop";
+    // Use water droplet emoji instead of blue circle
+    drop.textContent = "💧";
+    drop.style.backgroundColor = "transparent";
+    drop.style.display = "flex";
+    drop.style.alignItems = "center";
+    drop.style.justifyContent = "center";
+    drop.style.fontSize = `${Math.floor(Math.random() * 20 + 40)}px`;
     // Make drops different sizes for visual variety
     const initialSize = 60;
     const sizeMultiplier = Math.random() * 0.8 + 0.5;
@@ -182,6 +206,9 @@ function createDrop() {
         score++;
         updateScore();
         drop.remove();
+        // Play water hit sound
+        waterHitSound.currentTime = 0;
+        waterHitSound.play();
       }
     }, { once: true });
   }
