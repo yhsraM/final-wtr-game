@@ -14,6 +14,9 @@ let timeLeft = 45; // Default game time changed to 45 seconds
 let dropInterval = 1000; // Initial drop interval (ms)
 let dropSpeed = 4; // Initial drop speed (seconds)
 
+// Track if the game ended by clicking a bad emoji
+let endedByBadEmoji = false;
+
 // Wait for button click to start the game
 document.getElementById("start-btn").addEventListener("click", startGame);
 
@@ -113,6 +116,7 @@ function showGameOver() {
   overlay.innerHTML = `
     <div class="game-over-box">
       <h2>Game Over!</h2>
+      ${endedByBadEmoji ? '<div class="bad-emoji-message">Oh man.. try again to beat your high score!</div>' : ''}
       <div class="score-summary">
         <div class="high-score">Highest Score: <span>${highScore}</span></div>
         <div class="current-score">Your Score: <span>${score}</span></div>
@@ -127,6 +131,7 @@ function showGameOver() {
     // Reset dropInterval and dropSpeed to initial values before starting a new game
     dropInterval = 1000;
     dropSpeed = 4;
+    endedByBadEmoji = false;
     startGame();
   };
 }
@@ -182,6 +187,7 @@ function createDrop() {
       e.stopPropagation();
       if (gameRunning) {
         drop.remove();
+        endedByBadEmoji = true;
         endGame();
       }
     }, { once: true });
